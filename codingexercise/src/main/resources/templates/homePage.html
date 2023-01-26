@@ -1,0 +1,243 @@
+<html xmlns:th="https://www.thymeleaf.org/">
+   <head>
+      <link href = "css/stylesheet.css" rel = "stylesheet"/>
+      <title>Transactions</title>
+   </head>
+   <body style="background-color:lightgoldenrodyellow;margin-left:20px;">
+      	<h1 style="text-align: center;">Transactions Search</h1>
+      	<br>
+      	<div class="row">
+    		<div class="col-sm-3">
+      		<div class="form-group">
+	      		<label id="lblTransactionSearchType">Transaction Search Type:</label>
+	      		<select name="dropdownTransactionSearchType" id="dropdownTransactionSearchType" onchange="selectOnChange(this)">
+	      		  <option value="">Please Select</option>
+				  <option value="getAllTransactionByCategory">All Transactions By Category</option>
+				  <option value="getTotalOutgoingBasedOnCategory">Total Outgoing Per Category</option>
+				  <option value="getMonthlyAverageByCategory">Monthly Average By Category</option>
+				  <option value="getHighestTransactionByCategoryAndYear">Highest Transaction By Category & Year</option>
+				  <option value="getLowestTransactionByCategoryAndYear">Lowest Transaction By Category & Year</option>
+				</select>
+			</div></div>
+			<div class="col-sm-2">
+      		<div class="form-group">
+				<label id="lblDropdownCategory">Category:</label>
+				<select name="dropdownCategory" id="dropdownCategory">
+				</select>
+			</div></div>
+			<div class="col-sm-2">
+      		<div class="form-group">
+				<label id="lblDropdownYear">Year:</label>
+				<select name="dropdownYear" id="dropdownYear">
+				</select>
+			</div></div>
+		</div>
+
+		<div id="error" class="alert alert-danger" style="display:none;width:50%;" role="alert"></div> <br/>
+		<div>
+			<button type="button" class="btn btn-primary" onclick="searchTransactions()">Search</button>
+		</div><br/>
+		<div id= "tableDiv" style="display:none;">
+			<h2 style="text-align: center;" id="transactionSearchType"></h2><br/>
+			<div class="centerAl">
+				<table id="table1" style="display:none" class="table table-dark">
+				    <thead>
+				        <tr>
+				            <th scope="col">TRANSACTION_DATE</th>
+				            <th scope="col">VENDOR</th>
+				            <th scope="col">TRANSACTION_TYPE</th>
+				            <th scope="col">AMOUNT</th>
+				            <th scope="col">CATEGORY</th>
+				        </tr>
+				    </thead>
+				    <tbody id="table1TBody">
+				    </tbody>
+				</table>
+				
+				<table id="table2" style="display:none" class="table table-dark">
+				    <thead>
+				        <tr>
+				            <th scope="col" id="thCol1"></th>
+				            <th scope="col" id="thCol2"></th>
+				        </tr>
+				    </thead>
+				    <tbody id="table2TBody">
+				    </tbody>
+				</table>
+				
+				<h4 id="errMsgH2" style="display:none">No Records Found</h4>
+			</div>
+		</div>
+   </body>
+   <script src="js/jquery.min.js"></script>
+   <script>
+   		$(document).ready(function(){
+   			document.getElementById("dropdownCategory").style.display = 'none';
+			document.getElementById("dropdownYear").style.display = 'none';
+			document.getElementById("lblDropdownCategory").style.display = 'none';
+			document.getElementById("lblDropdownYear").style.display = 'none';
+			
+			document.getElementById("error").style.display = "none";
+	   		document.getElementById('error').innerHTML="";
+   		 	$.ajax({
+	             url: "transactionsDropDownList",	         
+	             type: "GET",
+	             success: function( data ) {
+	                if(data.categoryList && data.categoryList.length>0) {
+	                	$('#dropdownCategory').empty()
+	                	$('#dropdownCategory').append($('<option>',
+                		{
+            				 value: "",
+            				 text : "Please Select"
+            			}));
+	                	for (let i = 0; i < data.categoryList.length; i++) {
+	                		$('#dropdownCategory').append($('<option>',
+	                		{
+               				    value: data.categoryList[i],
+               				    text : data.categoryList[i]
+               				}));
+	                	}
+	                	
+	                }
+	                
+	                if(data.yearList && data.yearList.length>0) {
+	                	$('#dropdownYear').empty()
+	                	$('#dropdownYear').append($('<option>',
+                		{
+            				 value: "",
+            				 text : "Please Select"
+            			}));
+	                	for (let i = 0; i < data.yearList.length; i++) {
+	                		$('#dropdownYear').append($('<option>',
+	                		{
+               				    value: data.yearList[i],
+               				    text : data.yearList[i]
+               				}));
+	                	}
+	                }
+	             },
+	             error: function( xhr, status ) {
+	            	 document.getElementById("error").style.display = "block";
+	   	   			 document.getElementById('error').innerHTML="Sorry, there was a problem!";
+	             }
+             });
+   		});
+   		
+   		function selectOnChange(pthis) {
+   			var value = pthis.value;
+   			$('#dropdownCategory').val("");
+   			$('#dropdownYear').val("");
+   			document.getElementById("tableDiv").style.display = 'none';
+   			
+   			if(value == "getAllTransactionByCategory" || value == "getMonthlyAverageByCategory") {
+   				document.getElementById("dropdownCategory").style.display = 'block';
+   				document.getElementById("dropdownYear").style.display = 'none';	
+   				document.getElementById("lblDropdownCategory").style.display = 'block';
+   				document.getElementById("lblDropdownYear").style.display = 'none';
+   			} else if(value == "getHighestTransactionByCategoryAndYear" || value == "getLowestTransactionByCategoryAndYear") {
+   				document.getElementById("dropdownCategory").style.display = 'block';
+   				document.getElementById("dropdownYear").style.display = 'block'; 				
+   				document.getElementById("lblDropdownCategory").style.display = 'block';
+   				document.getElementById("lblDropdownYear").style.display = 'block';
+   			} else {
+   				document.getElementById("dropdownCategory").style.display = 'none';
+   				document.getElementById("dropdownYear").style.display = 'none';
+   				document.getElementById("lblDropdownCategory").style.display = 'none';
+   				document.getElementById("lblDropdownYear").style.display = 'none';
+   			}
+   		}
+   		
+   		function searchTransactions() {
+   			var searchType = $("#dropdownTransactionSearchType").val();
+   			var result = validate(searchType)
+   			document.getElementById("tableDiv").style.display = 'none';
+   			document.getElementById("errMsgH2").style.display = "none";
+   			document.getElementById("error").style.display = "none";
+	   		document.getElementById('error').innerHTML="";
+   			if(result) {
+   				var url = "transactions/"+searchType;
+   				if(searchType == "getAllTransactionByCategory" || searchType == "getMonthlyAverageByCategory") {
+   	   				url += "/"+$("#dropdownCategory").val();
+   	   			} else if(searchType == "getHighestTransactionByCategoryAndYear" || searchType == "getLowestTransactionByCategoryAndYear") {
+   	   				url += "/"+$("#dropdownCategory").val()+"/"+$("#dropdownYear").val();
+   	   			} 
+   				
+   				$.ajax({
+   	             url: url,	         
+   	             type: "GET",
+   	             success: function( data ) {
+   	            	$('#table1TBody').html("");
+   	            	$('#table2TBody').html("");
+   	            	 document.getElementById("transactionSearchType").innerHTML = $("#dropdownTransactionSearchType option:selected").text();
+   	            	 if(searchType == "getMonthlyAverageByCategory") {
+   	            		document.getElementById("table1").style.display = "none";
+   	            		document.getElementById("table2").style.display = "block";
+   	            		document.getElementById("thCol1").innerHTML = "Month";
+   	            		document.getElementById("thCol2").innerHTML = "Average";
+   	            		
+   	            		if(data.length>0) {
+   	            			for(let i=0;i<data.length;i++) {
+   	            				$('#table2TBody').append('<tr><td>'+data[i].statValue+'</td><td>'+data[i].amount+'</td></tr>');
+   	            			}
+   	            		} else {
+   	            			document.getElementById("errMsgH2").style.display = "block";
+   	            		}
+   	            		
+   	            	 } else if (searchType == "getTotalOutgoingBasedOnCategory") {
+   	            		document.getElementById("table1").style.display = "none";
+   	            		document.getElementById("table2").style.display = "block";
+   	            		document.getElementById("thCol1").innerHTML = "Category";
+   	            		document.getElementById("thCol2").innerHTML = "Amount";
+   	            		
+   	            		if(data.length>0) {
+   	            			for(let i=0;i<data.length;i++) {
+   	            				$('#table2TBody').append('<tr><td>'+data[i].statValue+'</td><td>'+data[i].amount+'</td></tr>');
+   	            			}
+   	            		} else {
+   	            			document.getElementById("errMsgH2").style.display = "block";
+   	            		}
+   	            	 } else {
+   	            		document.getElementById("table2").style.display = "none";
+   	            		document.getElementById("table1").style.display = "block";
+   	            		
+   	            		if(data.length>0) {
+   	            			for(let i=0;i<data.length;i++) {
+   	            				$('#table1TBody').append('<tr><td>'+data[i].transactionDate+'</td>'
+   	            						+'<td>'+data[i].vendor+'</td><td>'+data[i].transactionType+'</td>'
+   	            						+'<td>'+data[i].amount+'</td><td>'+data[i].category+'</td></tr>');
+   	            			}
+   	            		} else {
+   	            			document.getElementById("errMsgH2").style.display = "block";
+   	            		}
+   	            	 }
+   	            	 document.getElementById("tableDiv").style.display = 'block';
+   	             },
+   	             error: function( xhr, status ) {
+   	            	document.getElementById("error").style.display = "block";
+   	   				document.getElementById('error').innerHTML="Sorry, there was a problem!";
+   	             }
+                });
+   			} else {
+   				document.getElementById("error").style.display = "block";
+   				document.getElementById('error').innerHTML="Please select all values.";
+   				return result;
+   			}
+   		}
+   		
+		function validate(searchType) {
+			var result = true;
+			if(searchType) {
+				if(searchType == "getAllTransactionByCategory" || searchType == "getMonthlyAverageByCategory") {
+					if(!$("#dropdownCategory").val())
+						result = false;
+	   			} else if(searchType == "getHighestTransactionByCategoryAndYear" || searchType == "getLowestTransactionByCategoryAndYear") {
+	   				if(!$("#dropdownCategory").val() || !$("#dropdownYear").val())
+	   					result = false;
+	   			}
+			} else {
+				result = false;
+			}
+			return result;
+   		}
+   </script>
+</html>
