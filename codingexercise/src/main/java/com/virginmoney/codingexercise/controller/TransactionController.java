@@ -22,7 +22,7 @@ public class TransactionController {
 	@Autowired
 	TransactionService transactionService;
 
-	@GetMapping("/")
+	@GetMapping("/codingexercise")
 	public String showHomePage() {
 		return "homePage";
 	}
