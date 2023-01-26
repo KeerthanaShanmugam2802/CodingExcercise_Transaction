@@ -16,4 +16,5 @@ Use the category field to classify and provide the following:
 
 <b>Application view:</b>
 
-![image](https://user-images.githubusercontent.com/20477953/214953633-2cdd83e4-d2b1-4af8-9daa-1b2f1004801a.png)
+![image](https://user-images.githubusercontent.com/20477953/214956002-273c957e-af94-48b8-81ad-7ad32db566dc.png)
+
